@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survivor 50 — Fantasy Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ======= RESET & ROOT ======= */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0a0a08;
+  --paper:#f5f0e8;
+  --paper2:#ede8dc;
+  --paper3:#e4ddd0;
+  --torch:#e85d04;
+  --torch2:#f48c06;
+  --torch3:#faa307;
+  --fire:#dc2f02;
+  --jade:#2d6a4f;
+  --jade2:#40916c;
+  --silver:#8d99ae;
+  --silver2:#adb5bd;
+  --void:#1a1a16;
+  --void2:#2a2a24;
+  --void3:#3a3a32;
+  --bd:rgba(10,10,8,.12);
+  --bd2:rgba(10,10,8,.06);
+  --tx:var(--ink);
+  --radius:3px;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--paper);
+  color:var(--tx);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ======= GRAIN OVERLAY ======= */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.6;
+}
+
+/* ======= TOP BAR ======= */
+.topbar{
+  background:var(--void);
+  color:var(--paper);
+  padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:56px;
+  position:sticky;top:0;z-index:200;
+  border-bottom:3px solid var(--torch);
+}
+.topbar-title{
+  font-family:var(--font-display);
+  font-size:1.6rem;
+  letter-spacing:.04em;
+  color:var(--torch3);
+  line-height:1;
+}
+.topbar-title span{color:var(--paper);opacity:.5;font-size:1.1rem;margin-left:8px}
+.topbar-ticker{
+  display:flex;gap:20px;font-size:.72rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+  font-family:var(--font-mono);
+}
+.topbar-ticker .tk-item{display:flex;flex-direction:column;align-items:center;gap:1px}
+.topbar-ticker .tk-rank{color:var(--silver2);font-size:.6rem}
+.topbar-ticker .tk-name{color:var(--paper)}
+.topbar-ticker .tk-pts{color:var(--torch3);font-weight:600}
+.topbar-ticker .tk-1 .tk-pts{color:var(--torch3)}
+.topbar-ticker .tk-2 .tk-pts{color:var(--silver2)}
+.topbar-ticker .tk-3 .tk-pts{color:#cd7f32}
+.topbar-actions{display:flex;gap:6px}
+
+/* ======= BUTTONS ======= */
+.btn{
+  font-family:var(--font-body);
+  font-size:.75rem;font-weight:600;
+  letter-spacing:.03em;text-transform:uppercase;
+  padding:7px 14px;
+  border:1.5px solid currentColor;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:all .12s;
+  white-space:nowrap;
+}
+.btn-ghost{background:transparent;color:var(--paper);border-color:rgba(255,255,255,.25)}
+.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.5)}
+.btn-fire{background:var(--torch);color:#fff;border-color:var(--torch)}
+.btn-fire:hover{background:var(--fire);border-color:var(--fire)}
+.btn-ink{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn-ink:hover{background:var(--void2);border-color:var(--void2)}
+.btn-outline{background:transparent;color:var(--ink);border-color:var(--bd);border-color:rgba(10,10,8,.3)}
+.btn-outline:hover{border-color:var(--torch);color:var(--torch)}
+.btn-danger{background:transparent;color:var(--fire);border-color:var(--fire)}
+.btn-danger:hover{background:var(--fire);color:#fff}
+.btn-sm{padding:4px 10px;font-size:.68rem}
+
+/* ======= NAV TABS ======= */
+.nav{
+  background:var(--paper2);
+  border-bottom:2px solid var(--bd);
+  padding:0 24px;
+  display:flex;gap:0;
+  overflow-x:auto;
+}
+.nav-tab{
+  font-family:var(--font-display);
+  font-size:1.05rem;
+  letter-spacing:.06em;
+  padding:12px 22px 10px;
+  border:none;background:none;
+  color:var(--silver);
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  margin-bottom:-2px;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.nav-tab:hover{color:var(--ink)}
+.nav-tab.on{color:var(--torch);border-bottom-color:var(--torch)}
+
+/* ======= MAIN CONTENT ======= */
+.main{padding:28px 24px;max-width:1240px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+
+/* ======= SECTION LABEL ======= */
+.section-label{
+  font-family:var(--font-display);
+  font-size:.85rem;letter-spacing:.14em;
+  color:var(--silver);
+  text-transform:uppercase;
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* ======= LEADERBOARD ======= */
+.lb-list{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
+.lb-card{
+  background:var(--paper2);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  padding:16px 20px;
+  display:flex;align-items:center;gap:20px;
+  transition:all .15s;
+  position:relative;
+  overflow:hidden;
+}
+.lb-card::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:var(--silver2);
+}
+.lb-card.rk1::before{background:linear-gradient(180deg,var(--torch3),var(--torch))}
+.lb-card.rk2::before{background:var(--silver2)}
+.lb-card.rk3::before{background:#cd7f32}
+.lb-card:hover{border-color:rgba(10,10,8,.25);transform:translateX(2px)}
+
+.lb-rank{
+  font-family:var(--font-display);
+  font-size:2.2rem;
+  line-height:1;
+  width:40px;text-align:center;
+  color:var(--silver2);
+  flex-shrink:0;
+}
+.lb-card.rk1 .lb-rank{color:var(--torch)}
+.lb-card.rk2 .lb-rank{color:var(--silver2)}
+.lb-card.rk3 .lb-rank{color:#cd7f32}
+
+.lb-info{flex:1;min-width:0}
+.lb-name{
+  font-family:var(--font-display);
+  font-size:1.4rem;letter-spacing:.04em;
+  margin-bottom:6px;line-height:1;
+}
+.lb-picks{display:flex;gap:6px;flex-wrap:wrap}
+.pick-chip{
+  font-size:.72rem;font-weight:500;
+  padding:3px 9px;
+  border-radius:2px;
+  background:var(--paper3);
+  border:1px solid var(--bd);
+  display:flex;align-items:center;gap:4px;
+}
+.pick-chip.eliminated{text-decoration:line-through;opacity:.45}
+.pick-chip .pick-pts{
+  font-family:var(--font-mono);
+  font-size:.7rem;font-weight:600;
+  color:var(--torch);
+}
+.pick-chip.eliminated .pick-pts{color:var(--silver)}
+
+.lb-pts{
+  font-family:var(--font-display);
+  font-size:2.8rem;
+  line-height:1;
+  color:var(--torch);
+  flex-shrink:0;
+  letter-spacing:.02em;
+}
+
+/* ======= CHART ======= */
+.chart-wrap{
+  background:var(--void);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:8px;
+}
+.chart-header{
+  font-family:var(--font-display);
+  font-size:1rem;letter-spacing:.1em;
+  color:var(--silver2);
+  margin-bottom:16px;
+  text-transform:uppercase;
+}
+#chart{width:100%!important;height:260px!important}
+.chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--silver2)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ======= EPISODE VIEW ======= */
+.ep-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.ep-select{
+  font-family:var(--font-body);
+  font-size:.85rem;font-weight:500;
+  padding:8px 14px;
+  background:var(--void);
+  color:var(--paper);
+  border:1.5px solid var(--void2);
+  border-radius:var(--radius);
+  min-width:220px;
+  cursor:pointer;
+}
+.ep-select:focus{outline:none;border-color:var(--torch)}
+
+/* ======= PANELS ======= */
+.panel{
+  background:var(--paper2);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:14px;
+}
+.panel-title{
+  font-family:var(--font-display);
+  font-size:1rem;letter-spacing:.1em;
+  color:var(--ink);
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.panel-title .pill{
+  font-family:var(--font-mono);
+  font-size:.62rem;font-weight:500;
+  padding:2px 7px;
+  background:var(--torch);
+  color:#fff;
+  border-radius:20px;
+  letter-spacing:.03em;
+}
+
+/* ======= TRIBE DISPLAY ======= */
+.tribe-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.tribe-block{
+  background:var(--paper3);
+  border-radius:var(--radius);
+  padding:12px;
+  border:1px solid var(--bd);
+}
+.tribe-name{
+  font-family:var(--font-display);
+  font-size:.9rem;letter-spacing:.08em;
+  color:var(--torch);
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+.tribe-member{
+  font-size:.78rem;padding:3px 0;
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--ink);
+}
+.tribe-member.out{text-decoration:line-through;opacity:.4}
+.tribe-member .tm-drafter{font-size:.67rem;color:var(--silver);font-style:italic}
+
+/* ======= CHALLENGE ROWS ======= */
+.ch-rows{display:flex;flex-direction:column;gap:8px}
+.ch-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ch-label{font-size:.8rem;font-weight:600;min-width:150px;text-transform:uppercase;letter-spacing:.03em;color:var(--void3)}
+.ch-select{
+  font-family:var(--font-body);
+  font-size:.82rem;font-weight:400;
+  padding:7px 12px;
+  background:var(--paper3);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  color:var(--ink);
+  min-width:160px;
+  transition:border-color .12s;
+}
+.ch-select:focus{outline:none;border-color:var(--torch)}
+.ch-pts{font-size:.72rem;color:var(--silver);font-family:var(--font-mono)}
+
+.divider{height:1px;background:var(--bd);margin:12px 0}
+
+/* ======= CHECKBOX GRID ======= */
+.cb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;margin-top:10px}
+.cb-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;
+  border-radius:var(--radius);
+  font-size:.8rem;
+  background:var(--paper3);
+  border:1.5px solid var(--bd);
+  transition:border-color .1s;
+  cursor:pointer;
+}
+.cb-item:hover{border-color:rgba(10,10,8,.3)}
+.cb-item.dim{opacity:.38}
+.cb-item input[type=checkbox]{
+  accent-color:var(--torch);
+  width:15px;height:15px;cursor:pointer;flex-shrink:0;
+}
+.cb-item .cb-name{flex:1;font-weight:500}
+.cb-item .cb-name.strk{text-decoration:line-through;opacity:.5}
+.cb-item input[type=text]{
+  padding:2px 6px;
+  background:var(--paper);
+  border:1px solid var(--bd);
+  border-radius:2px;
+  color:var(--ink);
+  font-size:.7rem;
+  width:90px;
+  font-family:var(--font-body);
+}
+.adv-section{margin-bottom:14px}
+.adv-label{
+  font-size:.72rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.05em;
+  color:var(--silver);
+  margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.adv-label .adv-pts{
+  font-family:var(--font-mono);
+  font-size:.7rem;
+  padding:1px 6px;
+  border-radius:2px;
+  background:var(--jade2);
+  color:#fff;
+}
+.adv-label .adv-pts.neg{background:var(--fire)}
+
+/* ======= MVP/LVP ======= */
+.mvlvp-row{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.mvlvp-field{display:flex;align-items:center;gap:10px}
+.mvlvp-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--silver)}
+.mvlvp-pts{
+  font-family:var(--font-mono);
+  font-size:.72rem;
+  padding:2px 7px;
+  border-radius:2px;
+}
+.mvlvp-pts.pos{background:var(--jade2);color:#fff}
+.mvlvp-pts.neg{background:var(--fire);color:#fff}
+
+/* ======= ELIMINATION ======= */
+.elim-grid{display:flex;flex-wrap:wrap;gap:6px}
+.elim-chip{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 12px;
+  border-radius:var(--radius);
+  font-size:.77rem;font-weight:500;
+  background:var(--paper3);
+  border:1.5px solid var(--bd);
+  cursor:pointer;
+  transition:all .12s;
+}
+.elim-chip:hover{border-color:var(--fire)}
+.elim-chip.on{
+  background:rgba(220,47,2,.1);
+  border-color:var(--fire);
+  color:var(--fire);
+  text-decoration:line-through;
+}
+.elim-chip input[type=checkbox]{accent-color:var(--fire);width:13px;height:13px;cursor:pointer}
+
+/* ======= NOTES ======= */
+.notes-input{
+  width:100%;padding:8px 12px;
+  background:var(--paper3);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:.82rem;
+  margin-top:8px;
+  transition:border-color .12s;
+}
+.notes-input:focus{outline:none;border-color:var(--torch)}
+
+/* ======= SCOREBOARD ======= */
+.scoreboard-wrap{overflow-x:auto;border-radius:var(--radius);border:1.5px solid var(--bd);margin-top:4px}
+.scoreboard-wrap table{
+  width:100%;border-collapse:collapse;
+  font-size:.8rem;min-width:680px;
+}
+.scoreboard-wrap th{
+  font-family:var(--font-display);
+  font-size:.75rem;letter-spacing:.1em;
+  padding:9px 12px;
+  background:var(--void);
+  color:var(--silver2);
+  text-align:center;border-bottom:2px solid var(--torch);
+}
+.scoreboard-wrap th:first-child{text-align:left}
+.scoreboard-wrap td{padding:7px 12px;text-align:center;border-bottom:1px solid var(--bd2)}
+.scoreboard-wrap td:first-child{text-align:left}
+.scoreboard-wrap tr.drafter-row{background:var(--paper3)}
+.scoreboard-wrap tr.drafter-row td{font-family:var(--font-display);font-size:.9rem;letter-spacing:.04em;border-bottom:2px solid var(--bd)}
+.scoreboard-wrap tr.player-row td:first-child{padding-left:22px;font-size:.77rem}
+.scoreboard-wrap tr.player-row.dim td:first-child{text-decoration:line-through;opacity:.4}
+.scoreboard-wrap .val-pos{color:var(--jade2);font-weight:600;font-family:var(--font-mono)}
+.scoreboard-wrap .val-neg{color:var(--fire);font-weight:600;font-family:var(--font-mono)}
+.scoreboard-wrap .val-tot{color:var(--torch);font-weight:700;font-family:var(--font-mono)}
+
+/* ======= END GAME ======= */
+.endgame-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.endgame-slot{display:flex;flex-direction:column;gap:6px}
+.endgame-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--silver)}
+.endgame-select{
+  font-family:var(--font-body);font-size:.82rem;
+  padding:7px 12px;
+  background:var(--paper3);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  color:var(--ink);
+}
+.endgame-select:focus{outline:none;border-color:var(--torch)}
+
+/* ======= PLAYER CARDS ======= */
+.pc-controls{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.pc-controls select{
+  font-family:var(--font-body);font-size:.82rem;
+  padding:7px 12px;
+  background:var(--paper2);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  color:var(--ink);
+}
+.pc-controls select:focus{outline:none;border-color:var(--torch)}
+.pc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+
+.player-card{
+  background:var(--paper2);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  padding:16px;
+  cursor:pointer;
+  transition:all .15s;
+  position:relative;overflow:hidden;
+}
+.player-card::after{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:var(--bd);
+  transition:background .15s;
+}
+.player-card:hover{border-color:rgba(10,10,8,.3);transform:translateY(-2px)}
+.player-card:hover::after{background:var(--torch)}
+.player-card.eliminated{opacity:.55}
+
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.pc-name{font-family:var(--font-display);font-size:1.25rem;letter-spacing:.04em;line-height:1}
+.player-card.eliminated .pc-name{text-decoration:line-through}
+.pc-drafter{font-size:.7rem;color:var(--silver);margin-top:2px;font-style:italic}
+.pc-pts{font-family:var(--font-display);font-size:2rem;color:var(--torch);line-height:1}
+.pc-badge{
+  display:inline-block;font-size:.6rem;font-weight:600;
+  padding:2px 6px;border-radius:2px;
+  background:var(--fire);color:#fff;
+  text-transform:uppercase;letter-spacing:.05em;
+  margin-top:4px;
+}
+
+.pc-body{padding-top:10px;border-top:1px solid var(--bd)}
+.pc-bar{display:flex;height:5px;border-radius:2px;overflow:hidden;background:var(--paper3);margin-bottom:8px}
+.pc-bar div{height:100%}
+.pc-breakdown{font-size:.72rem;color:var(--silver)}
+.pc-breakdown div{display:flex;justify-content:space-between;padding:2px 0}
+.pc-breakdown .bk-pts{font-family:var(--font-mono);font-weight:600}
+
+/* ======= DETAIL OVERLAY ======= */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(10,10,8,.65);
+  backdrop-filter:blur(4px);
+  z-index:300;display:none;
+  align-items:center;justify-content:center;padding:24px;
+}
+.overlay.on{display:flex}
+.detail-panel{
+  background:var(--paper);
+  border:2px solid var(--bd);
+  border-radius:var(--radius);
+  padding:28px;
+  max-width:480px;width:100%;
+  max-height:85vh;overflow-y:auto;
+  position:relative;
+}
+.detail-close{
+  position:absolute;top:16px;right:16px;
+  background:none;border:none;
+  font-size:1.3rem;color:var(--silver);
+  cursor:pointer;line-height:1;
+  transition:color .12s;
+}
+.detail-close:hover{color:var(--ink)}
+.detail-name{font-family:var(--font-display);font-size:2rem;letter-spacing:.04em;margin-bottom:2px}
+.detail-meta{font-size:.8rem;color:var(--silver);font-style:italic;margin-bottom:16px}
+.detail-pts{
+  font-family:var(--font-display);
+  font-size:3.5rem;color:var(--torch);
+  line-height:1;margin-bottom:20px;
+}
+.detail-cats{margin-bottom:20px}
+.detail-cats div{
+  display:flex;justify-content:space-between;
+  padding:5px 0;font-size:.83rem;
+  border-bottom:1px solid var(--bd2);
+}
+.detail-cats .dcat-pts{font-family:var(--font-mono);font-weight:600}
+.ep-history h4{
+  font-family:var(--font-display);font-size:.85rem;letter-spacing:.08em;
+  color:var(--silver);text-transform:uppercase;margin-bottom:10px;
+}
+.ep-hi{padding:8px 0;border-bottom:1px solid var(--bd2);font-size:.8rem}
+.ep-hi-label{font-weight:600;margin-bottom:4px;font-family:var(--font-display);font-size:.85rem;letter-spacing:.03em}
+.ep-hi-ev{display:flex;justify-content:space-between;padding:2px 0 2px 12px;color:var(--silver)}
+.ep-hi-ev .ev-pts{font-family:var(--font-mono);font-weight:600}
+.ev-pts.pos{color:var(--jade2)}.ev-pts.neg{color:var(--fire)}
+
+/* ======= MODAL ======= */
+.modal{
+  position:fixed;inset:0;
+  background:rgba(10,10,8,.65);
+  backdrop-filter:blur(4px);
+  z-index:300;display:none;
+  align-items:center;justify-content:center;padding:24px;
+}
+.modal.on{display:flex}
+.modal-box{
+  background:var(--paper);
+  border:2px solid var(--bd);
+  border-radius:var(--radius);
+  padding:28px;max-width:400px;width:100%;
+}
+.modal-box.wide{max-width:600px}
+.modal-title{font-family:var(--font-display);font-size:1.5rem;letter-spacing:.04em;margin-bottom:20px}
+.form-field{margin-bottom:14px}
+.form-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--silver);display:block;margin-bottom:5px}
+.form-input{
+  width:100%;padding:8px 12px;
+  background:var(--paper2);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  color:var(--ink);
+  font-family:var(--font-body);font-size:.85rem;
+  transition:border-color .12s;
+}
+.form-input:focus{outline:none;border-color:var(--torch)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* ======= TRIBE EDITOR ======= */
+.tribe-edit-block{
+  margin-bottom:16px;padding:14px;
+  background:var(--paper2);
+  border-radius:var(--radius);
+  border:1.5px solid var(--bd);
+}
+.tribe-edit-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.tribe-edit-member{
+  display:flex;align-items:center;gap:6px;
+  padding:3px 0;font-size:.8rem;
+}
+.tribe-edit-member span{flex:1}
+
+/* ======= TOAST ======= */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--void);
+  color:var(--paper);
+  border-left:4px solid var(--torch);
+  padding:11px 18px;
+  border-radius:var(--radius);
+  font-size:.8rem;font-weight:500;
+  z-index:500;
+  opacity:0;pointer-events:none;
+  transform:translateY(8px);
+  transition:opacity .2s, transform .2s;
+  max-width:320px;
+}
+.toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+/* ======= EMPTY STATE ======= */
+.empty{
+  padding:48px 24px;
+  text-align:center;
+  color:var(--silver);
+  font-size:.85rem;
+  font-style:italic;
+}
+
+/* ======= RESPONSIVE ======= */
+@media(max-width:640px){
+  .topbar{height:auto;padding:10px 16px;flex-wrap:wrap;gap:8px}
+  .topbar-ticker{display:none}
+  .topbar-title{font-size:1.3rem}
+  .nav{padding:0 12px}
+  .main{padding:16px 12px}
+  .lb-card{flex-wrap:wrap}
+  .lb-pts{font-size:2rem}
+  .ch-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .mvlvp-row{flex-direction:column;align-items:flex-start}
+  .topbar-actions{gap:4px}
+  .btn{font-size:.68rem;padding:5px 10px}
+}
+</style>
+<script id="embedded-data" type="application/json">{"season":50,"drafters":{"Cara":["Mike White","Tiffany Ervin","Ben Coach Wade","Jenna Lewis-Dougherty"],"Eliz":["Angelina Keeley","Q Burdette","Chrissy Hofbeck","Colby Donaldson"],"Ryan":["Cirie Fields","Ozzy Lusth","Kamilla Karthigesu","Kyle Fraser"],"Matt":["Genevieve Mushaluk","Emily Flippen","Christian Hubicki","Dee Valladares"],"Conor":["Charlie Davis","Jonathan Young","Joe Hunter","Rizo Velovic"],"Misc":["Stephenie Kendrick","Aubry Bracco","Savannah Louie","Rick Devens"]},"tribes":{"Cila":["Rizo Velovic","Dee Valladares","Cirie Fields","Kamilla Karthigesu","Rick Devens","Charlie Davis","Jonathan Young"],"Kalo":["Aubry Bracco","Colby Donaldson","Ben Coach Wade","Chrissy Hofbeck","Tiffany Ervin","Genevieve Mushaluk","Joe Hunter"],"Vatu":["Mike White","Stephenie Kendrick","Angelina Keeley","Q Burdette","Christian Hubicki","Ozzy Lusth","Emily Flippen"]},"eliminatedPlayers":["Jenna Lewis-Dougherty","Kyle Fraser","Savannah Louie","Q Burdette","Mike White"],"scoring":{"sole_survivor":50,"runner_up":25,"third_place":10,"tribal_reward_1st":2,"tribal_reward_2nd":1,"tribal_immunity_1st":3,"tribal_immunity_2nd":2,"individual_reward":3,"individual_immunity":5,"find_advantage":5,"play_idol_correct":10,"play_idol_incorrect":-5,"voted_out_with_idol":-10,"mvp":3,"lvp":-3},"episodes":[{"number":1,"title":"Episode 1","date":"2/25/26","challenges":{"reward_1st":"Vatu","reward_2nd":"","immunity_1st":"Kalo","immunity_2nd":"Vatu"},"advantages":[{"player":"Ozzy Lusth","type":"find_advantage","points":5,"note":"Extra Vote"},{"player":"Genevieve Mushaluk","type":"find_advantage","points":2.5,"note":"Boomerang Idol"}],"events":[{"player":"Mike White","type":"tribal_immunity_1st","points":3},{"player":"Tiffany Ervin","type":"tribal_immunity_1st","points":3},{"player":"Ben Coach Wade","type":"tribal_immunity_1st","points":3},{"player":"Angelina Keeley","type":"tribal_reward_1st","points":2},{"player":"Angelina Keeley","type":"tribal_immunity_2nd","points":2},{"player":"Q Burdette","type":"tribal_reward_1st","points":2},{"player":"Q Burdette","type":"tribal_immunity_2nd","points":2},{"player":"Chrissy Hofbeck","type":"tribal_immunity_1st","points":3},{"player":"Colby Donaldson","type":"tribal_reward_1st","points":2},{"player":"Colby Donaldson","type":"tribal_immunity_2nd","points":2},{"player":"Ozzy Lusth","type":"find_advantage","points":5},{"player":"Kamilla Karthigesu","type":"tribal_immunity_1st","points":3},{"player":"Kyle Fraser","type":"tribal_reward_1st","points":2},{"player":"Kyle Fraser","type":"tribal_immunity_2nd","points":2},{"player":"Genevieve Mushaluk","type":"tribal_reward_1st","points":2},{"player":"Genevieve Mushaluk","type":"tribal_immunity_2nd","points":2},{"player":"Genevieve Mushaluk","type":"find_advantage","points":2.5},{"player":"Dee Valladares","type":"tribal_immunity_1st","points":3},{"player":"Charlie Davis","type":"tribal_immunity_1st","points":3},{"player":"Jonathan Young","type":"tribal_immunity_1st","points":3},{"player":"Rizo Velovic","type":"tribal_reward_1st","points":2},{"player":"Rizo Velovic","type":"tribal_immunity_2nd","points":2},{"player":"Stephenie Kendrick","type":"tribal_reward_1st","points":2},{"player":"Stephenie Kendrick","type":"tribal_immunity_2nd","points":2},{"player":"Aubry Bracco","type":"tribal_reward_1st","points":2},{"player":"Aubry Bracco","type":"tribal_immunity_2nd","points":2}],"notes":"*Extra Vote (Ozzy), *Boomerang Idol (Genevieve)"},{"number":2,"title":"Episode 2","date":"3/4/26","challenges":{"reward_1st":"Cila","reward_2nd":"Kalo","immunity_1st":"Vatu","immunity_2nd":"Kalo"},"advantages":[{"player":"Christian Hubicki","type":"find_advantage","points":5,"note":"mrs billy Eilish idol"},{"player":"Aubry Bracco","type":"find_advantage","points":5,"note":"billie idol from christian"}],"events":[{"player":"Joe Hunter","type":"tribal_reward_1st","points":2},{"player":"Savannah Louie","type":"tribal_reward_1st","points":2},{"player":"Christian Hubicki","type":"tribal_reward_1st","points":2},{"player":"Cirie Fields","type":"tribal_reward_1st","points":2},{"player":"Ozzy Lusth","type":"tribal_reward_1st","points":2},{"player":"Emily Flippen","type":"tribal_reward_1st","points":2},{"player":"Rick Devens","type":"tribal_reward_1st","points":2},{"player":"Jenna Lewis-Dougherty","type":"tribal_reward_1st","points":2},{"player":"Jonathan Young","type":"tribal_reward_2nd","points":1},{"player":"Dee Valladares","type":"tribal_reward_2nd","points":1},{"player":"Mike White","type":"tribal_reward_2nd","points":1},{"player":"Kamilla Karthigesu","type":"tribal_reward_2nd","points":1},{"player":"Charlie Davis","type":"tribal_reward_2nd","points":1},{"player":"Tiffany Ervin","type":"tribal_reward_2nd","points":1},{"player":"Ben Coach Wade","type":"tribal_reward_2nd","points":1},{"player":"Chrissy Hofbeck","type":"tribal_reward_2nd","points":1},{"player":"Colby Donaldson","type":"tribal_immunity_1st","points":3},{"player":"Genevieve Mushaluk","type":"tribal_immunity_1st","points":3},{"player":"Rizo Velovic","type":"tribal_immunity_1st","points":3},{"player":"Angelina Keeley","type":"tribal_immunity_1st","points":3},{"player":"Q Burdette","type":"tribal_immunity_1st","points":3},{"player":"Stephenie Kendrick","type":"tribal_immunity_1st","points":3},{"player":"Kyle Fraser","type":"tribal_immunity_1st","points":3},{"player":"Aubry Bracco","type":"tribal_immunity_1st","points":3},{"player":"Jonathan Young","type":"tribal_immunity_2nd","points":2},{"player":"Dee Valladares","type":"tribal_immunity_2nd","points":2},{"player":"Mike White","type":"tribal_immunity_2nd","points":2},{"player":"Kamilla Karthigesu","type":"tribal_immunity_2nd","points":2},{"player":"Charlie Davis","type":"tribal_immunity_2nd","points":2},{"player":"Tiffany Ervin","type":"tribal_immunity_2nd","points":2},{"player":"Ben Coach Wade","type":"tribal_immunity_2nd","points":2},{"player":"Chrissy Hofbeck","type":"tribal_immunity_2nd","points":2},{"player":"Christian Hubicki","type":"find_advantage","points":5},{"player":"Aubry Bracco","type":"find_advantage","points":5},{"player":"Christian Hubicki","type":"mvp","points":3}],"notes":""},{"number":3,"title":"Episode 3","date":"3/11/26","events":[{"player":"Rizo Velovic","type":"tribal_immunity_1st","points":3},{"player":"Dee Valladares","type":"tribal_immunity_1st","points":3},{"player":"Cirie Fields","type":"tribal_immunity_1st","points":3},{"player":"Kamilla Karthigesu","type":"tribal_immunity_1st","points":3},{"player":"Rick Devens","type":"tribal_immunity_1st","points":3},{"player":"Charlie Davis","type":"tribal_immunity_1st","points":3},{"player":"Jonathan Young","type":"tribal_immunity_1st","points":3},{"player":"Aubry Bracco","type":"tribal_immunity_2nd","points":2},{"player":"Colby Donaldson","type":"tribal_immunity_2nd","points":2},{"player":"Ben Coach Wade","type":"tribal_immunity_2nd","points":2},{"player":"Chrissy Hofbeck","type":"tribal_immunity_2nd","points":2},{"player":"Tiffany Ervin","type":"tribal_immunity_2nd","points":2},{"player":"Genevieve Mushaluk","type":"tribal_immunity_2nd","points":2},{"player":"Joe Hunter","type":"tribal_immunity_2nd","points":2}],"challenges":{"immunity_1st":"Cila","immunity_2nd":"Kalo"},"advantages":[],"notes":""},{"number":4,"title":"Episode 4","date":"03/18/26","events":[{"player":"Aubry Bracco","type":"tribal_immunity_1st","points":3},{"player":"Colby Donaldson","type":"tribal_immunity_1st","points":3},{"player":"Ben Coach Wade","type":"tribal_immunity_1st","points":3},{"player":"Chrissy Hofbeck","type":"tribal_immunity_1st","points":3},{"player":"Tiffany Ervin","type":"tribal_immunity_1st","points":3},{"player":"Genevieve Mushaluk","type":"tribal_immunity_1st","points":3},{"player":"Joe Hunter","type":"tribal_immunity_1st","points":3},{"player":"Rizo Velovic","type":"tribal_immunity_2nd","points":2},{"player":"Dee Valladares","type":"tribal_immunity_2nd","points":2},{"player":"Cirie Fields","type":"tribal_immunity_2nd","points":2},{"player":"Kamilla Karthigesu","type":"tribal_immunity_2nd","points":2},{"player":"Rick Devens","type":"tribal_immunity_2nd","points":2},{"player":"Charlie Davis","type":"tribal_immunity_2nd","points":2},{"player":"Jonathan Young","type":"tribal_immunity_2nd","points":2},{"player":"Genevieve Mushaluk","type":"find_advantage","points":5},{"player":"Rizo Velovic","type":"find_advantage","points":5}],"challenges":{"immunity_1st":"Kalo","immunity_2nd":"Cila"},"advantages":[{"player":"Genevieve Mushaluk","type":"find_advantage","points":5,"note":"BILLY"},{"player":"Rizo Velovic","type":"find_advantage","points":5,"note":"BILLY from Geny"}],"notes":""}],"endgame":{}}</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">Survivor<span>S50</span></div>
+  <div class="topbar-ticker" id="ticker"></div>
+  <div class="topbar-actions">
+    <button class="btn btn-fire" id="btnShare">Share</button>
+    <button class="btn btn-ghost" id="btnExport">Export</button>
+    <button class="btn btn-ghost" id="btnImport">Import</button>
+    <input type="file" id="fileIn" accept=".json" style="display:none">
+  </div>
+</header>
+
+<nav class="nav" id="tabs">
+  <button class="nav-tab on" data-v="leaderboard">Leaderboard</button>
+  <button class="nav-tab" data-v="episodes">Episodes</button>
+  <button class="nav-tab" data-v="players">Players</button>
+</nav>
+
+<div class="main">
+
+  <!-- LEADERBOARD -->
+  <div class="view on" id="v-leaderboard">
+    <div class="lb-list" id="lbGrid"></div>
+    <div class="chart-wrap">
+      <div class="chart-header">Score Progression</div>
+      <canvas id="chart"></canvas>
+      <div class="chart-legend" id="chartLeg"></div>
+    </div>
+  </div>
+
+  <!-- EPISODES -->
+  <div class="view" id="v-episodes">
+    <div class="ep-toolbar">
+      <select class="ep-select" id="epSel"></select>
+      <button class="btn btn-ink" id="btnAddEp">+ Add Episode</button>
+      <button class="btn btn-danger" id="btnDelEp">Delete</button>
+    </div>
+    <div id="epEntry"></div>
+    <div class="section-label" style="margin-top:24px">Scoreboard</div>
+    <div class="scoreboard-wrap" id="scoreboard"></div>
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-title">End-Game Awards</div>
+      <div class="endgame-grid" id="egGrid"></div>
+    </div>
+  </div>
+
+  <!-- PLAYERS -->
+  <div class="view" id="v-players">
+    <div class="pc-controls">
+      <select id="filtDraft"><option value="">All Drafters</option></select>
+      <select id="sortPl">
+        <option value="pts-d">Points ↓</option>
+        <option value="pts-a">Points ↑</option>
+        <option value="name">Name A–Z</option>
+        <option value="draft">By Drafter</option>
+      </select>
+    </div>
+    <div class="pc-grid" id="plGrid"></div>
+  </div>
+
+</div>
+
+<!-- Overlays -->
+<div class="overlay" id="plOverlay"><div class="detail-panel" id="plDetail"></div></div>
+<div class="modal" id="addEpModal"><div class="modal-box">
+  <div class="modal-title">New Episode</div>
+  <div class="form-field"><label class="form-label">Number</label><input class="form-input" type="number" id="epNum" min="1"></div>
+  <div class="form-field"><label class="form-label">Title</label><input class="form-input" type="text" id="epTitle" placeholder="Episode title"></div>
+  <div class="form-field"><label class="form-label">Date</label><input class="form-input" type="text" id="epDate" placeholder="M/D/YY"></div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" id="btnCancelEp">Cancel</button>
+    <button class="btn btn-ink" id="btnConfirmEp">Add</button>
+  </div>
+</div></div>
+<div class="modal" id="tribeModal"><div class="modal-box wide" id="tribeEdit"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let D = null;
+
+const COLORS = {Cara:'#e85d04',Eliz:'#2d6a4f',Ryan:'#f48c06',Matt:'#8d99ae',Conor:'#dc2f02',Misc:'#a855f7'};
+const ETYPE = {
+  tribal_reward_1st:'Tribal Reward 1st',tribal_reward_2nd:'Tribal Reward 2nd',
+  tribal_immunity_1st:'Tribal Immunity 1st',tribal_immunity_2nd:'Tribal Immunity 2nd',
+  individual_reward:'Individual Reward',individual_immunity:'Individual Immunity',
+  find_advantage:'Found Idol/Advantage',play_idol_correct:'Played Idol Correctly',
+  play_idol_incorrect:'Played Idol Incorrectly',voted_out_with_idol:'Voted Out With Idol',
+  mvp:'MVP',lvp:'LVP',sole_survivor:'Sole Survivor',runner_up:'Runner-Up',third_place:'3rd Place'
+};
+const ADV_TYPES = ['find_advantage','play_idol_correct','play_idol_incorrect','voted_out_with_idol'];
+const ECAT_COL = {
+  tribal_reward_1st:'#f48c06',tribal_reward_2nd:'#faa307',individual_reward:'#faa307',
+  tribal_immunity_1st:'#3b82f6',tribal_immunity_2nd:'#60a5fa',individual_immunity:'#60a5fa',
+  find_advantage:'#2d6a4f',play_idol_correct:'#40916c',play_idol_incorrect:'#dc2f02',voted_out_with_idol:'#dc2f02',
+  mvp:'#a855f7',lvp:'#ec4899'
+};
+
+// ===== LOAD / SAVE =====
+async function load() {
+  let saved = localStorage.getItem('survivor50data');
+  if (saved) try { D = JSON.parse(saved); } catch(e) { D = null; }
+  if (!D) {
+    try {
+      let ed = document.getElementById('embedded-data');
+      if (ed && ed.textContent.trim()) D = JSON.parse(ed.textContent);
+    } catch(e) { D = null; }
+  }
+  if (!D) {
+    try { let r = await fetch('../archive/data.json'); if (r.ok) D = await r.json(); } catch(e) {}
+  }
+  if (!D) D = {season:50,drafters:{},tribes:{},eliminatedPlayers:[],scoring:{},episodes:[]};
+  if (!D.endgame) D.endgame = {};
+  if (!D.tribes) D.tribes = {};
+  D.episodes.forEach(ep => {
+    if (!ep.challenges) ep.challenges = {};
+    if (!ep.advantages) ep.advantages = [];
+  });
+  renderAll();
+}
+
+function save() { localStorage.setItem('survivor50data', JSON.stringify(D)); }
+
+// ===== HELPERS =====
+function $(id) { return document.getElementById(id); }
+function allPlayers() {
+  let out = [];
+  for (let [dr,ps] of Object.entries(D.drafters)) for (let p of ps) out.push({name:p,drafter:dr});
+  return out;
+}
+function drafterOf(p) { for (let [d,ps] of Object.entries(D.drafters)) if (ps.includes(p)) return d; return null; }
+function tribeOf(p) { for (let [t,ms] of Object.entries(D.tribes)) if (ms.includes(p)) return t; return null; }
+function isOut(p) { return D.eliminatedPlayers.includes(p); }
+function playerPts(p) {
+  let t = 0;
+  for (let ep of D.episodes) for (let ev of ep.events) if (ev.player===p) t += ev.points;
+  if (D.endgame) for (let [k,v] of Object.entries(D.endgame)) if (v===p) t += D.scoring[k]||0;
+  return t;
+}
+function playerPtsThru(p, idx) {
+  let t = 0;
+  for (let i=0;i<=idx&&i<D.episodes.length;i++)
+    for (let ev of D.episodes[i].events) if (ev.player===p) t += ev.points;
+  return t;
+}
+function drafterPts(d) { return D.drafters[d].reduce((s,p)=>s+playerPts(p),0); }
+function drafterPtsThru(d,idx) { return D.drafters[d].reduce((s,p)=>s+playerPtsThru(p,idx),0); }
+function ranked() { return Object.keys(D.drafters).map(d=>({name:d,pts:drafterPts(d)})).sort((a,b)=>b.pts-a.pts); }
+function epEvents(p,num) { let ep=D.episodes.find(e=>e.number===num); return ep?ep.events.filter(e=>e.player===p):[]; }
+function playerCats(p) {
+  let c={};
+  for (let ep of D.episodes) for (let ev of ep.events) if (ev.player===p) { c[ev.type]=(c[ev.type]||0)+ev.points; }
+  return c;
+}
+function toast(m) {
+  let t=$('toast'); t.textContent=m;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ===== REBUILD EVENTS =====
+function rebuildEvents(ep) {
+  let evs=[], ch=ep.challenges||{};
+  const map={reward_1st:'tribal_reward_1st',reward_2nd:'tribal_reward_2nd',immunity_1st:'tribal_immunity_1st',immunity_2nd:'tribal_immunity_2nd'};
+  for (let [ck,et] of Object.entries(map)) {
+    let tribe=ch[ck];
+    if (tribe&&D.tribes[tribe]) {
+      let pts=D.scoring[et];
+      for (let p of D.tribes[tribe]) evs.push({player:p,type:et,points:pts});
+    }
+  }
+  if (ch.individual_immunity) evs.push({player:ch.individual_immunity,type:'individual_immunity',points:D.scoring.individual_immunity});
+  if (ch.individual_reward) evs.push({player:ch.individual_reward,type:'individual_reward',points:D.scoring.individual_reward});
+  for (let a of (ep.advantages||[])) evs.push({player:a.player,type:a.type,points:a.points});
+  let mvp=ep.events.find(e=>e.type==='mvp');
+  let lvp=ep.events.find(e=>e.type==='lvp');
+  if (mvp) evs.push(mvp);
+  if (lvp) evs.push(lvp);
+  ep.events=evs;
+}
+
+function curEp() { let s=$('epSel'); return D.episodes.find(e=>e.number===parseInt(s.value)); }
+
+// ===== RENDER ALL =====
+function renderAll() {
+  renderTicker();
+  renderLB();
+  renderEpSelect();
+  renderEpView();
+  renderPlFilters();
+  renderPlCards();
+  renderEndgame();
+  drawChart();
+}
+
+// ===== TICKER =====
+function renderTicker() {
+  let r=ranked();
+  $('ticker').innerHTML = r.slice(0,3).map((d,i)=>`<div class="tk-item tk-${i+1}"><span class="tk-rank">#${i+1}</span><span class="tk-name">${d.name}</span><span class="tk-pts">${d.pts}</span></div>`).join('');
+}
+
+// ===== LEADERBOARD =====
+function renderLB() {
+  let r=ranked();
+  $('lbGrid').innerHTML = r.map((d,i)=>{
+    let chips = D.drafters[d.name].map(p=>{
+      let el=isOut(p), pts=playerPts(p);
+      return `<span class="pick-chip${el?' eliminated':''}">${p.split(' ')[0]}<span class="pick-pts">${pts}</span></span>`;
+    }).join('');
+    return `<div class="lb-card rk${i+1}">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-info">
+        <div class="lb-name">${d.name}</div>
+        <div class="lb-picks">${chips}</div>
+      </div>
+      <div class="lb-pts">${d.pts}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== CHART =====
+function drawChart() {
+  let c=$('chart'); if (!c||!c.getContext) return;
+  let ctx=c.getContext('2d'), dpr=devicePixelRatio||1;
+  c.width=c.offsetWidth*dpr; c.height=260*dpr;
+  ctx.scale(dpr,dpr);
+  let w=c.offsetWidth, h=260;
+  ctx.clearRect(0,0,w,h);
+  let dns=Object.keys(D.drafters), ne=D.episodes.length;
+  if (!ne) {
+    ctx.fillStyle='#8d99ae';ctx.font='13px DM Sans, sans-serif';ctx.textAlign='center';
+    ctx.fillText('No episodes yet',w/2,h/2); return;
+  }
+  let lines={}, mx=0;
+  for (let d of dns) {
+    lines[d]=[0];
+    for (let i=0;i<ne;i++){let p=drafterPtsThru(d,i);lines[d].push(p);if(p>mx)mx=p;}
+  }
+  let pad={t:16,r:16,b:28,l:38}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  mx=Math.max(mx,10);
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
+  for (let i=0;i<=4;i++){
+    let y=pad.t+(ph/4)*i;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    ctx.fillStyle='rgba(141,153,174,.7)';ctx.font='10px DM Mono, monospace';ctx.textAlign='right';
+    ctx.fillText(Math.round(mx-(mx/4)*i),pad.l-5,y+4);
+  }
+  ctx.textAlign='center';ctx.fillStyle='rgba(141,153,174,.7)';ctx.font='10px DM Mono, monospace';
+  for (let i=0;i<=ne;i++){
+    let x=pad.l+(pw/ne)*i;
+    ctx.fillText(i===0?'Start':`E${D.episodes[i-1].number}`,x,h-5);
+  }
+  // Lines
+  for (let d of dns) {
+    let col=COLORS[d]||'#888';
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;
+    ctx.shadowColor=col;ctx.shadowBlur=6;
+    ctx.beginPath();
+    for (let i=0;i<=ne;i++){
+      let x=pad.l+(pw/ne)*i, y=pad.t+ph-(lines[d][i]/mx)*ph;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();ctx.shadowBlur=0;
+    for (let i=0;i<=ne;i++){
+      let x=pad.l+(pw/ne)*i, y=pad.t+ph-(lines[d][i]/mx)*ph;
+      ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fillStyle=col;ctx.fill();
+      ctx.strokeStyle=var_void;ctx.lineWidth=1.5;ctx.stroke();
+    }
+  }
+  $('chartLeg').innerHTML=dns.map(d=>`<div class="legend-item"><div class="legend-dot" style="background:${COLORS[d]||'#888'}"></div>${d}</div>`).join('');
+}
+const var_void='#1a1a16';
+
+// ===== EPISODE SELECT =====
+function renderEpSelect() {
+  let s=$('epSel'), cv=s.value;
+  s.innerHTML=D.episodes.map(e=>`<option value="${e.number}">Ep ${e.number}: ${e.title}${e.date?' ('+e.date+')':''}</option>`).join('');
+  if (cv&&D.episodes.find(e=>e.number===parseInt(cv))) s.value=cv;
+}
+
+// ===== EPISODE VIEW =====
+function renderEpView() {
+  let ep=curEp();
+  if (!ep){$('epEntry').innerHTML='';$('scoreboard').innerHTML='<div class="empty">No episodes yet.</div>';return;}
+  renderEntryPanel(ep);
+  renderScoreboard(ep);
+}
+
+function renderEntryPanel(ep) {
+  let tribes=Object.keys(D.tribes), ch=ep.challenges||{}, ap=allPlayers();
+  let h='';
+
+  // Tribes
+  h+='<div class="panel"><div class="panel-title">Tribes <button class="btn btn-sm btn-outline" id="btnEditTribes">Edit</button></div><div class="tribe-grid">';
+  for (let [tn,ms] of Object.entries(D.tribes)) {
+    h+=`<div class="tribe-block"><div class="tribe-name">${tn}</div>`;
+    for (let p of ms) h+=`<div class="tribe-member${isOut(p)?' out':''}">${p}<span class="tm-drafter">${drafterOf(p)}</span></div>`;
+    h+='</div>';
+  }
+  h+='</div></div>';
+
+  // Challenges
+  h+='<div class="panel"><div class="panel-title">Challenge Results</div><div class="ch-rows">';
+  function tribeSel(id,cur){
+    let o=`<option value="">— none —</option>`;
+    for (let t of tribes) o+=`<option value="${t}"${t===cur?' selected':''}>${t}</option>`;
+    return `<select class="ch-select" id="${id}">${o}</select>`;
+  }
+  h+=`<div class="ch-row"><span class="ch-label">Reward 1st</span>${tribeSel('ch_reward_1st',ch.reward_1st||'')}<span class="ch-pts">+${D.scoring.tribal_reward_1st} each</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Reward 2nd</span>${tribeSel('ch_reward_2nd',ch.reward_2nd||'')}<span class="ch-pts">+${D.scoring.tribal_reward_2nd} each</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Immunity 1st</span>${tribeSel('ch_immunity_1st',ch.immunity_1st||'')}<span class="ch-pts">+${D.scoring.tribal_immunity_1st} each</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Immunity 2nd</span>${tribeSel('ch_immunity_2nd',ch.immunity_2nd||'')}<span class="ch-pts">+${D.scoring.tribal_immunity_2nd} each</span></div>`;
+  h+='<div class="divider"></div>';
+  function plSel(id,cur){
+    let o=`<option value="">— none —</option>`;
+    for (let p of ap) o+=`<option value="${p.name}"${p.name===cur?' selected':''}>${p.name}</option>`;
+    return `<select class="ch-select" id="${id}">${o}</select>`;
+  }
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity</span>${plSel('ch_ind_imm',ch.individual_immunity||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward</span>${plSel('ch_ind_rew',ch.individual_reward||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+='</div></div>';
+
+  // Advantages
+  h+='<div class="panel"><div class="panel-title">Advantages & Idols</div>';
+  function advSection(type,label,pts){
+    let sign=pts>=0?'+':'';
+    let negCls=pts<0?' neg':'';
+    h+=`<div class="adv-section"><div class="adv-label">${label}<span class="adv-pts${negCls}">${sign}${pts}</span></div><div class="cb-grid">`;
+    for (let p of ap){
+      let adv=(ep.advantages||[]).find(a=>a.player===p.name&&a.type===type);
+      let dm=isOut(p.name)?' dim':'', sk=isOut(p.name)?' strk':'';
+      h+=`<div class="cb-item${dm}"><input type="checkbox" data-adv="${type}" data-player="${p.name}"${adv?' checked':''}><span class="cb-name${sk}">${p.name}</span>`;
+      if (type==='find_advantage'&&adv) h+=`<input type="text" data-advnote data-player="${p.name}" value="${(adv.note||'').replace(/"/g,'&quot;')}" placeholder="note...">`;
+      h+='</div>';
+    }
+    h+='</div></div>';
+  }
+  advSection('find_advantage','Found Idol/Advantage',D.scoring.find_advantage);
+  advSection('play_idol_correct','Played Idol Correctly',D.scoring.play_idol_correct);
+  advSection('play_idol_incorrect','Played Idol Incorrectly',D.scoring.play_idol_incorrect);
+  advSection('voted_out_with_idol','Voted Out With Idol',D.scoring.voted_out_with_idol);
+  h+='</div>';
+
+  // MVP/LVP
+  let mvpP=ep.events.find(e=>e.type==='mvp'), lvpP=ep.events.find(e=>e.type==='lvp');
+  h+='<div class="panel"><div class="panel-title">MVP & LVP</div><div class="mvlvp-row">';
+  h+=`<div class="mvlvp-field"><span class="mvlvp-label">MVP</span>${plSel('sel_mvp',mvpP?mvpP.player:'')}<span class="mvlvp-pts pos">+${D.scoring.mvp}</span></div>`;
+  h+=`<div class="mvlvp-field"><span class="mvlvp-label">LVP</span>${plSel('sel_lvp',lvpP?lvpP.player:'')}<span class="mvlvp-pts neg">${D.scoring.lvp}</span></div>`;
+  h+='</div></div>';
+
+  // Eliminated
+  h+='<div class="panel"><div class="panel-title">Mark Eliminated</div><div class="elim-grid">';
+  for (let p of ap) {
+    let on=isOut(p.name);
+    h+=`<label class="elim-chip${on?' on':''}"><input type="checkbox" data-elim="${p.name}"${on?' checked':''}>${p.name}</label>`;
+  }
+  h+='</div></div>';
+
+  // Notes
+  h+=`<div class="panel"><div class="panel-title">Episode Notes</div><input class="notes-input" id="epNotes" type="text" value="${(ep.notes||'').replace(/"/g,'&quot;')}" placeholder="e.g. Idol played, surprise vote..."></div>`;
+
+  $('epEntry').innerHTML=h;
+
+  // Listeners
+  ['reward_1st','reward_2nd','immunity_1st','immunity_2nd'].forEach(key=>{
+    let el=$('ch_'+key);
+    if (el) el.addEventListener('change',function(){
+      let ep=curEp();if(!ep)return;
+      ep.challenges[key]=this.value;
+      rebuildEvents(ep);save();renderScoreboard(ep);renderTicker();renderLB();
+    });
+  });
+  let indImm=$('ch_ind_imm');
+  if (indImm) indImm.addEventListener('change',function(){
+    let ep=curEp();if(!ep)return;
+    ep.challenges.individual_immunity=this.value;
+    rebuildEvents(ep);save();renderScoreboard(ep);renderTicker();renderLB();
+  });
+  let indRew=$('ch_ind_rew');
+  if (indRew) indRew.addEventListener('change',function(){
+    let ep=curEp();if(!ep)return;
+    ep.challenges.individual_reward=this.value;
+    rebuildEvents(ep);save();renderScoreboard(ep);renderTicker();renderLB();
+  });
+  document.querySelectorAll('[data-adv]').forEach(cb=>{
+    cb.addEventListener('change',function(){
+      let ep=curEp();if(!ep)return;
+      let type=this.dataset.adv,player=this.dataset.player;
+      if (!ep.advantages) ep.advantages=[];
+      if (this.checked) ep.advantages.push({player,type,points:D.scoring[type],note:''});
+      else ep.advantages=ep.advantages.filter(a=>!(a.player===player&&a.type===type));
+      rebuildEvents(ep);save();renderEntryPanel(ep);renderScoreboard(ep);renderTicker();renderLB();
+    });
+  });
+  document.querySelectorAll('[data-advnote]').forEach(inp=>{
+    inp.addEventListener('change',function(){
+      let ep=curEp();if(!ep)return;
+      let adv=(ep.advantages||[]).find(a=>a.player===this.dataset.player&&a.type==='find_advantage');
+      if (adv) adv.note=this.value;save();
+    });
+  });
+  let mvpSel=$('sel_mvp');
+  if (mvpSel) mvpSel.addEventListener('change',function(){
+    let ep=curEp();if(!ep)return;
+    ep.events=ep.events.filter(e=>e.type!=='mvp');
+    if (this.value) ep.events.push({player:this.value,type:'mvp',points:D.scoring.mvp});
+    save();renderScoreboard(ep);renderTicker();renderLB();
+  });
+  let lvpSel=$('sel_lvp');
+  if (lvpSel) lvpSel.addEventListener('change',function(){
+    let ep=curEp();if(!ep)return;
+    ep.events=ep.events.filter(e=>e.type!=='lvp');
+    if (this.value) ep.events.push({player:this.value,type:'lvp',points:D.scoring.lvp});
+    save();renderScoreboard(ep);renderTicker();renderLB();
+  });
+  document.querySelectorAll('[data-elim]').forEach(cb=>{
+    cb.addEventListener('change',function(){
+      let p=this.dataset.elim, i=D.eliminatedPlayers.indexOf(p);
+      if (i>=0) D.eliminatedPlayers.splice(i,1); else D.eliminatedPlayers.push(p);
+      save();renderAll();
+    });
+  });
+  let notesIn=$('epNotes');
+  if (notesIn) notesIn.addEventListener('change',function(){
+    let ep=curEp();if(ep){ep.notes=this.value;save();}
+  });
+  let etb=$('btnEditTribes');
+  if (etb) etb.addEventListener('click',showTribeEditor);
+}
+
+// ===== SCOREBOARD =====
+function renderScoreboard(ep) {
+  if (!ep){$('scoreboard').innerHTML='';return;}
+  let cols=['Reward','Immunity','Advantages','MVP','LVP','Total'];
+  let h='<table><thead><tr><th>Player</th>';
+  for (let c of cols) h+=`<th>${c}</th>`;
+  h+='</tr></thead><tbody>';
+  for (let [dr,ps] of Object.entries(D.drafters)){
+    let dt=ps.reduce((s,p)=>s+epEvents(p,ep.number).reduce((s2,e)=>s2+e.points,0),0);
+    h+=`<tr class="drafter-row"><td>${dr}</td>`;
+    for (let i=0;i<cols.length-1;i++) h+='<td></td>';
+    h+=`<td class="val-tot">${dt}</td></tr>`;
+    for (let p of ps){
+      let evs=epEvents(p,ep.number), dm=isOut(p)?' dim':'';
+      let rew=evs.filter(e=>['tribal_reward_1st','tribal_reward_2nd','individual_reward'].includes(e.type));
+      let imm=evs.filter(e=>['tribal_immunity_1st','tribal_immunity_2nd','individual_immunity'].includes(e.type));
+      let adv=evs.filter(e=>ADV_TYPES.includes(e.type));
+      let mvp=evs.filter(e=>e.type==='mvp'), lvp=evs.filter(e=>e.type==='lvp');
+      let tot=evs.reduce((s,e)=>s+e.points,0);
+      function cv(arr){let v=arr.reduce((s,e)=>s+e.points,0);return `<td class="${v>0?'val-pos':v<0?'val-neg':''}">${v||''}</td>`;}
+      h+=`<tr class="player-row${dm}"><td>${p}</td>${cv(rew)}${cv(imm)}${cv(adv)}${cv(mvp)}${cv(lvp)}<td class="val-tot">${tot||''}</td></tr>`;
+    }
+  }
+  h+='</tbody></table>';
+  $('scoreboard').innerHTML=h;
+}
+
+// ===== ADD/DELETE EPISODE =====
+$('btnAddEp').addEventListener('click',()=>{
+  let nx=D.episodes.length>0?Math.max(...D.episodes.map(e=>e.number))+1:1;
+  $('epNum').value=nx; $('epTitle').value=`Episode ${nx}`; $('epDate').value='';
+  $('addEpModal').classList.add('on');
+});
+$('btnCancelEp').addEventListener('click',()=>$('addEpModal').classList.remove('on'));
+$('btnConfirmEp').addEventListener('click',()=>{
+  let num=parseInt($('epNum').value), title=$('epTitle').value||`Episode ${num}`, date=$('epDate').value||'';
+  if (D.episodes.find(e=>e.number===num)){toast('Episode number exists');return;}
+  D.episodes.push({number:num,title,date,events:[],challenges:{},advantages:[],notes:''});
+  D.episodes.sort((a,b)=>a.number-b.number);
+  save();$('addEpModal').classList.remove('on');
+  renderEpSelect();$('epSel').value=num;renderEpView();drawChart();
+  toast(`Episode ${num} added`);
+});
+$('btnDelEp').addEventListener('click',()=>{
+  let ep=curEp();if(!ep)return;
+  if (!confirm(`Delete Episode ${ep.number}?`))return;
+  D.episodes=D.episodes.filter(e=>e.number!==ep.number);
+  save();renderAll();toast(`Episode ${ep.number} deleted`);
+});
+$('epSel').addEventListener('change',renderEpView);
+
+// ===== TRIBE EDITOR =====
+function showTribeEditor(){
+  let ap=allPlayers();
+  let h='<div class="modal-title">Edit Tribes</div>';
+  h+='<div style="margin-bottom:14px"><button class="btn btn-sm btn-outline" id="btnAddTribe">+ Add Tribe</button></div>';
+  for (let tn of Object.keys(D.tribes)){
+    h+=`<div class="tribe-edit-block">`;
+    h+=`<div class="tribe-edit-header">`;
+    h+=`<input type="text" value="${tn}" data-renameTribe="${tn}" style="flex:1;padding:5px 8px;background:var(--paper);border:1.5px solid var(--bd);border-radius:3px;color:var(--ink);font-weight:600;font-size:.85rem;font-family:var(--font-body)">`;
+    h+=`<button class="btn btn-sm btn-danger" data-delTribe="${tn}">Delete</button></div>`;
+    for (let p of D.tribes[tn]){
+      h+=`<div class="tribe-edit-member"><span>${p}</span><button class="btn btn-sm btn-outline" style="font-size:.65rem;padding:1px 7px" data-rmPlayer="${p}" data-fromTribe="${tn}">×</button></div>`;
+    }
+    let unassigned=ap.filter(p=>!tribeOf(p.name));
+    if (unassigned.length){
+      h+=`<select data-addToTribe="${tn}" style="margin-top:8px;width:100%;padding:5px 8px;background:var(--paper);border:1.5px solid var(--bd);border-radius:3px;color:var(--ink);font-size:.8rem;font-family:var(--font-body)">`;
+      h+=`<option value="">+ Add player...</option>`;
+      for (let p of unassigned) h+=`<option value="${p.name}">${p.name}</option>`;
+      h+='</select>';
+    }
+    h+='</div>';
+  }
+  let unassigned=ap.filter(p=>!tribeOf(p.name));
+  if (unassigned.length) h+=`<div style="font-size:.78rem;color:var(--silver);margin-top:10px"><strong>Unassigned:</strong> ${unassigned.map(p=>p.name).join(', ')}</div>`;
+  h+='<div class="modal-actions"><button class="btn btn-ink" id="btnCloseTribe">Done</button></div>';
+  $('tribeEdit').innerHTML=h;
+  $('tribeModal').classList.add('on');
+  let at=$('btnAddTribe');
+  if (at) at.addEventListener('click',()=>{
+    let n=prompt('Tribe name:');if(!n)return;
+    D.tribes[n]=[];save();showTribeEditor();
+  });
+  $('btnCloseTribe').addEventListener('click',()=>{$('tribeModal').classList.remove('on');renderAll();});
+  document.querySelectorAll('[data-renameTribe]').forEach(inp=>{
+    inp.addEventListener('change',function(){
+      let old=this.dataset.renametribe, nw=this.value;
+      if (!nw||nw===old)return;
+      D.tribes[nw]=D.tribes[old];delete D.tribes[old];
+      for (let ep of D.episodes) if (ep.challenges) for (let k of Object.keys(ep.challenges)) if (ep.challenges[k]===old) ep.challenges[k]=nw;
+      save();showTribeEditor();
+    });
+  });
+  document.querySelectorAll('[data-delTribe]').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      if (!confirm(`Delete tribe "${this.dataset.deltribe}"?`))return;
+      delete D.tribes[this.dataset.deltribe];save();showTribeEditor();
+    });
+  });
+  document.querySelectorAll('[data-rmPlayer]').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      let t=this.dataset.fromtribe, p=this.dataset.rmplayer;
+      D.tribes[t]=D.tribes[t].filter(x=>x!==p);save();showTribeEditor();
+    });
+  });
+  document.querySelectorAll('[data-addToTribe]').forEach(sel=>{
+    sel.addEventListener('change',function(){
+      let t=this.dataset.addtotribe, p=this.value;if(!p)return;
+      for (let ms of Object.values(D.tribes)){let i=ms.indexOf(p);if(i>=0)ms.splice(i,1);}
+      D.tribes[t].push(p);save();showTribeEditor();
+    });
+  });
+}
+
+// ===== ENDGAME =====
+function renderEndgame(){
+  let ap=allPlayers().map(p=>p.name);
+  let slots=[{k:'sole_survivor',l:'Sole Survivor',pts:'+50'},{k:'runner_up',l:'Runner-Up',pts:'+25'},{k:'third_place',l:'3rd Place',pts:'+10'}];
+  $('egGrid').innerHTML=slots.map(s=>{
+    let cur=(D.endgame&&D.endgame[s.k])||'';
+    let opts=`<option value="">— none —</option>`+ap.map(p=>`<option value="${p}"${p===cur?' selected':''}>${p}</option>`).join('');
+    return `<div class="endgame-slot"><label class="endgame-label">${s.l} <span style="color:var(--torch);font-family:var(--font-mono)">${s.pts}</span></label><select class="endgame-select" data-eg="${s.k}">${opts}</select></div>`;
+  }).join('');
+  document.querySelectorAll('[data-eg]').forEach(sel=>{
+    sel.addEventListener('change',function(){
+      if (!D.endgame) D.endgame={};
+      if (this.value) D.endgame[this.dataset.eg]=this.value;
+      else delete D.endgame[this.dataset.eg];
+      save();renderAll();
+    });
+  });
+}
+
+// ===== PLAYER CARDS =====
+function renderPlFilters(){
+  let s=$('filtDraft'),cv=s.value;
+  s.innerHTML='<option value="">All Drafters</option>'+Object.keys(D.drafters).map(d=>`<option value="${d}"${d===cv?' selected':''}>${d}</option>`).join('');
+}
+function renderPlCards(){
+  let f=$('filtDraft').value, so=$('sortPl').value;
+  let ps=allPlayers();
+  if (f) ps=ps.filter(p=>p.drafter===f);
+  if (so==='pts-d') ps.sort((a,b)=>playerPts(b.name)-playerPts(a.name));
+  else if (so==='pts-a') ps.sort((a,b)=>playerPts(a.name)-playerPts(b.name));
+  else if (so==='name') ps.sort((a,b)=>a.name.localeCompare(b.name));
+  $('plGrid').innerHTML=ps.map(p=>{
+    let pts=playerPts(p.name), el=isOut(p.name), cats=playerCats(p.name);
+    let ta=Object.values(cats).reduce((s,v)=>s+Math.abs(v),0)||1;
+    let bar=Object.entries(cats).filter(([,v])=>v>0).map(([t,v])=>`<div style="width:${(v/ta)*100}%;background:${ECAT_COL[t]||'#888'}"></div>`).join('');
+    let list=Object.entries(cats).map(([t,v])=>`<div><span>${ETYPE[t]||t}</span><span class="bk-pts" style="color:${v>=0?'var(--jade2)':'var(--fire)'}">${v>=0?'+':''}${v}</span></div>`).join('');
+    return `<div class="player-card${el?' eliminated':''}" data-showpl="${p.name}">
+      <div class="pc-top">
+        <div>
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-drafter">${p.drafter}'s pick</div>
+          ${el?'<div class="pc-badge">Out</div>':''}
+        </div>
+        <div class="pc-pts">${pts}</div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-bar">${bar}</div>
+        <div class="pc-breakdown">${list||'<div style="text-align:center;padding:4px 0">No points yet</div>'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-showpl]').forEach(el=>{
+    el.addEventListener('click',function(){showPlDetail(this.dataset.showpl);});
+  });
+}
+$('filtDraft').addEventListener('change',renderPlCards);
+$('sortPl').addEventListener('change',renderPlCards);
+
+// ===== PLAYER DETAIL =====
+function showPlDetail(name){
+  let pts=playerPts(name), dr=drafterOf(name), el=isOut(name), cats=playerCats(name);
+  let h=`<button class="detail-close" id="closePl">×</button>`;
+  h+=`<div class="detail-name"${el?' style="text-decoration:line-through"':''}>${name}</div>`;
+  h+=`<div class="detail-meta">${dr}'s pick${el?' · Eliminated':''}</div>`;
+  h+=`<div class="detail-pts">${pts}<span style="font-size:1.2rem;color:var(--silver);margin-left:4px">pts</span></div>`;
+  h+='<div class="detail-cats">';
+  for (let [t,v] of Object.entries(cats)){
+    let c=v>=0?'var(--jade2)':'var(--fire)';
+    h+=`<div><span>${ETYPE[t]||t}</span><span class="dcat-pts" style="color:${c}">${v>=0?'+':''}${v}</span></div>`;
+  }
+  h+='</div><div class="ep-history"><h4>Episode History</h4>';
+  for (let ep of D.episodes){
+    let evs=ep.events.filter(e=>e.player===name);if(!evs.length)continue;
+    h+=`<div class="ep-hi"><div class="ep-hi-label">Ep ${ep.number} — ${ep.title}</div>`;
+    for (let ev of evs) h+=`<div class="ep-hi-ev"><span>${ETYPE[ev.type]||ev.type}</span><span class="ev-pts${ev.points>=0?' pos':' neg'}">${ev.points>=0?'+':''}${ev.points}</span></div>`;
+    h+='</div>';
+  }
+  h+='</div>';
+  $('plDetail').innerHTML=h;
+  $('plOverlay').classList.add('on');
+  $('closePl').addEventListener('click',()=>$('plOverlay').classList.remove('on'));
+}
+$('plOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+
+// ===== IMPORT / EXPORT =====
+$('btnExport').addEventListener('click',()=>{
+  let b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  let u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='survivor50-data.json';a.click();URL.revokeObjectURL(u);
+  toast('Data exported');
+});
+$('btnShare').addEventListener('click',()=>{
+  let html=document.documentElement.outerHTML;
+  html=html.replace(
+    /<script id="embedded-data"[^>]*>[^]*?<\/script>/,
+    `<script id="embedded-data" type="application/json">${JSON.stringify(D)}<\/script>`
+  );
+  let b=new Blob([`<!DOCTYPE html>\n${html}`],{type:'text/html'});
+  let u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='survivor50-ep'+((D.episodes.length>0?Math.max(...D.episodes.map(e=>e.number)):0))+'.html';a.click();
+  URL.revokeObjectURL(u);
+  toast('Saved! On iPhone: tap file → Share → Open in Safari');
+});
+$('btnImport').addEventListener('click',()=>$('fileIn').click());
+$('fileIn').addEventListener('change',function(){
+  let f=this.files[0];if(!f)return;
+  let r=new FileReader();
+  r.onload=e=>{
+    try{
+      D=JSON.parse(e.target.result);
+      if(!D.endgame)D.endgame={};if(!D.tribes)D.tribes={};
+      D.episodes.forEach(ep=>{if(!ep.challenges)ep.challenges={};if(!ep.advantages)ep.advantages=[];});
+      save();renderAll();toast('Data imported');
+    }catch(err){toast('Invalid JSON file');}
+  };
+  r.readAsText(f);this.value='';
+});
+
+// ===== TABS =====
+function switchTab(v) {
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(vw=>vw.classList.remove('on'));
+  document.querySelector(`.nav-tab[data-v="${v}"]`).classList.add('on');
+  $('v-'+v).classList.add('on');
+  if (v==='leaderboard') drawChart();
+}
+document.querySelectorAll('.nav-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>switchTab(tab.dataset.v));
+  tab.addEventListener('touchend', e=>{e.preventDefault(); switchTab(tab.dataset.v);});
+});
+
+// ===== ESCAPE =====
+document.addEventListener('keydown',e=>{
+  if (e.key==='Escape'){
+    $('plOverlay').classList.remove('on');
+    $('addEpModal').classList.remove('on');
+    $('tribeModal').classList.remove('on');
+  }
+});
+$('addEpModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+$('tribeModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+window.addEventListener('resize',()=>{
+  if (document.querySelector('.nav-tab[data-v="leaderboard"]').classList.contains('on')) drawChart();
+});
+
+load();
+</script>
+</body>
+</html>
