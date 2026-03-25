@@ -622,6 +622,26 @@ body::before{
   font-style:italic;
 }
 
+/* ======= SYNC VIEW ======= */
+.sync-desc{font-size:.83rem;color:var(--silver);margin-bottom:14px;line-height:1.5}
+.sync-textarea{
+  width:100%;min-height:110px;
+  padding:10px 12px;
+  background:var(--paper3);
+  border:1.5px solid var(--bd);
+  border-radius:var(--radius);
+  color:var(--ink);
+  font-family:var(--font-mono);font-size:.72rem;
+  resize:vertical;display:block;
+  margin-bottom:10px;
+}
+.sync-textarea:focus{outline:none;border-color:var(--torch)}
+.sync-fallback{display:none;margin-top:12px}
+.sync-fallback.show{display:block}
+.sync-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.sync-danger-panel{border-color:rgba(220,47,2,.3)!important;background:rgba(220,47,2,.04)!important}
+.sync-danger-panel .panel-title{color:var(--fire)}
+
 /* ======= RESPONSIVE ======= */
 @media(max-width:640px){
   .topbar{height:auto;padding:10px 16px;flex-wrap:wrap;gap:8px}
@@ -656,6 +676,7 @@ body::before{
   <button class="nav-tab on" data-v="leaderboard">Leaderboard</button>
   <button class="nav-tab" data-v="episodes">Episodes</button>
   <button class="nav-tab" data-v="players">Players</button>
+  <button class="nav-tab" data-v="sync">Sync</button>
 </nav>
 
 <div class="main">
@@ -698,6 +719,39 @@ body::before{
       </select>
     </div>
     <div class="pc-grid" id="plGrid"></div>
+  </div>
+
+  <!-- SYNC -->
+  <div class="view" id="v-sync">
+    <div class="section-label">Export</div>
+    <div class="panel">
+      <div class="panel-title">Export Data</div>
+      <p class="sync-desc">Copies all app data to your clipboard as JSON. Paste it here to share between devices, or send it to update the seed data.</p>
+      <div class="sync-row">
+        <button class="btn btn-ink" id="btnSyncExport">Copy to Clipboard</button>
+      </div>
+      <div class="sync-fallback" id="syncFallback">
+        <p class="sync-desc" style="margin-top:10px;margin-bottom:6px">Clipboard unavailable — copy the JSON below manually:</p>
+        <textarea class="sync-textarea" id="syncExportArea" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Import</div>
+    <div class="panel">
+      <div class="panel-title">Import Data</div>
+      <p class="sync-desc">Paste exported JSON below. Existing records are updated; new records are added. Nothing is deleted.</p>
+      <textarea class="sync-textarea" id="syncImportArea" placeholder="Paste exported JSON here…"></textarea>
+      <div class="sync-row">
+        <button class="btn btn-ink" id="btnSyncImport" disabled>Import Data</button>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Danger Zone</div>
+    <div class="panel sync-danger-panel">
+      <div class="panel-title">Reset to Seed Data</div>
+      <p class="sync-desc">Wipes all local changes and restores the original built-in data. This cannot be undone.</p>
+      <button class="btn btn-danger" id="btnSyncReset">Reset All Data</button>
+    </div>
   </div>
 
 </div>
@@ -1269,7 +1323,57 @@ function showPlDetail(name){
 }
 $('plOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
 
-// ===== IMPORT / EXPORT =====
+// ===== SYNC / EXPORT / IMPORT =====
+function exportData() {
+  return { version: 1, exportedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(D)) };
+}
+
+function importData(exported) {
+  let src = (exported && exported.data) ? exported.data : exported;
+  let added = 0, updated = 0;
+
+  // Episodes — merge by episode number
+  if (Array.isArray(src.episodes)) {
+    for (let ep of src.episodes) {
+      let idx = D.episodes.findIndex(e => e.number === ep.number);
+      if (idx >= 0) { D.episodes[idx] = ep; updated++; }
+      else { D.episodes.push(ep); added++; }
+    }
+    D.episodes.sort((a,b) => a.number - b.number);
+  }
+
+  // Drafters — merge by drafter name
+  if (src.drafters && typeof src.drafters === 'object') {
+    for (let [k,v] of Object.entries(src.drafters)) {
+      if (!D.drafters[k]) { D.drafters[k] = v; added++; }
+      else { D.drafters[k] = v; updated++; }
+    }
+  }
+
+  // Tribes — merge by tribe name
+  if (src.tribes && typeof src.tribes === 'object') {
+    for (let [k,v] of Object.entries(src.tribes)) {
+      if (!D.tribes[k]) { D.tribes[k] = v; added++; }
+      else { D.tribes[k] = v; updated++; }
+    }
+  }
+
+  // Eliminated players — union
+  if (Array.isArray(src.eliminatedPlayers)) {
+    let newOnes = src.eliminatedPlayers.filter(p => !D.eliminatedPlayers.includes(p));
+    added += newOnes.length;
+    D.eliminatedPlayers = [...D.eliminatedPlayers, ...newOnes];
+  }
+
+  // Scoring & endgame — simple merge
+  if (src.scoring) Object.assign(D.scoring, src.scoring);
+  if (src.endgame) Object.assign(D.endgame, src.endgame);
+
+  save(); renderAll();
+  return { added, updated, total: D.episodes.length };
+}
+
+// ===== LEGACY FILE IMPORT / EXPORT =====
 $('btnExport').addEventListener('click',()=>{
   let b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
   let u=URL.createObjectURL(b),a=document.createElement('a');
@@ -1301,6 +1405,58 @@ $('fileIn').addEventListener('change',function(){
     }catch(err){toast('Invalid JSON file');}
   };
   r.readAsText(f);this.value='';
+});
+
+// ===== SYNC TAB UI =====
+$('btnSyncExport').addEventListener('click', () => {
+  let json = JSON.stringify(exportData(), null, 2);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(json).then(() => {
+      toast('Copied to clipboard!');
+      $('syncFallback').classList.remove('show');
+    }).catch(() => {
+      $('syncExportArea').value = json;
+      $('syncFallback').classList.add('show');
+      toast('Clipboard unavailable — copy from the box below');
+    });
+  } else {
+    $('syncExportArea').value = json;
+    $('syncFallback').classList.add('show');
+    toast('Copy the JSON from the box below');
+  }
+});
+
+$('syncImportArea').addEventListener('input', function() {
+  $('btnSyncImport').disabled = this.value.trim() === '';
+});
+
+$('btnSyncImport').addEventListener('click', () => {
+  let raw = $('syncImportArea').value.trim();
+  if (!raw) return;
+  try {
+    let parsed = JSON.parse(raw);
+    let result = importData(parsed);
+    $('syncImportArea').value = '';
+    $('btnSyncImport').disabled = true;
+    toast(`Imported: +${result.added} added, ${result.updated} updated (${result.total} episodes total)`);
+  } catch(e) {
+    toast('Invalid JSON — check the pasted data');
+  }
+});
+
+$('btnSyncReset').addEventListener('click', () => {
+  if (!confirm('Reset all data to the original seed data? This cannot be undone.')) return;
+  try {
+    let ed = document.getElementById('embedded-data');
+    D = JSON.parse(ed.textContent);
+    if (!D.endgame) D.endgame = {};
+    if (!D.tribes) D.tribes = {};
+    D.episodes.forEach(ep => { if (!ep.challenges) ep.challenges = {}; if (!ep.advantages) ep.advantages = []; });
+    save(); renderAll();
+    toast('Reset to seed data');
+  } catch(e) {
+    toast('Reset failed');
+  }
 });
 
 // ===== TABS =====
