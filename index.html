@@ -1035,10 +1035,11 @@ function renderEntryPanel(ep) {
     let sign=pts>=0?'+':'';
     let negCls=pts<0?' neg':'';
     h+=`<div class="adv-section"><div class="adv-label">${label}<span class="adv-pts${negCls}">${sign}${pts}</span></div><div class="cb-grid">`;
-    for (let p of ap){
+    let alreadyChecked=(ep.advantages||[]).filter(a=>a.type===type).map(a=>a.player);
+    let advAp=ap.filter(p=>!isOut(p.name)||alreadyChecked.includes(p.name));
+    for (let p of advAp){
       let adv=(ep.advantages||[]).find(a=>a.player===p.name&&a.type===type);
-      let dm=isOut(p.name)?' dim':'', sk=isOut(p.name)?' strk':'';
-      h+=`<div class="cb-item${dm}"><input type="checkbox" data-adv="${type}" data-player="${p.name}"${adv?' checked':''}><span class="cb-name${sk}">${p.name}</span>`;
+      h+=`<div class="cb-item"><input type="checkbox" data-adv="${type}" data-player="${p.name}"${adv?' checked':''}><span class="cb-name">${p.name}</span>`;
       if (type==='find_advantage'&&adv) h+=`<input type="text" data-advnote data-player="${p.name}" value="${(adv.note||'').replace(/"/g,'&quot;')}" placeholder="note...">`;
       h+='</div>';
     }
