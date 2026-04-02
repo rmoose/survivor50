@@ -812,6 +812,16 @@ async function load() {
   // Fill in scoring keys added after initial release
   const scoringDefaults = {individual_immunity_1st:7, individual_reward_1st:5};
   for (let [k,v] of Object.entries(scoringDefaults)) if (D.scoring[k]==null) D.scoring[k]=v;
+  // Backfill per-episode tribe snapshots from seed for episodes missing them
+  try {
+    let seedEps=JSON.parse(document.getElementById('embedded-data').textContent).episodes;
+    for (let ep of D.episodes) {
+      if (!ep.tribes) {
+        let s=seedEps.find(e=>e.number===ep.number);
+        if (s&&s.tribes) ep.tribes=s.tribes;
+      }
+    }
+  } catch(e) {}
   D.episodes.forEach(ep => {
     if (!ep.challenges) ep.challenges = {};
     if (!ep.advantages) ep.advantages = [];
