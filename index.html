@@ -809,6 +809,9 @@ async function load() {
   if (!D) D = {season:50,drafters:{},tribes:{},eliminatedPlayers:[],scoring:{},episodes:[]};
   if (!D.endgame) D.endgame = {};
   if (!D.tribes) D.tribes = {};
+  // Fill in scoring keys added after initial release
+  const scoringDefaults = {individual_immunity_1st:7, individual_reward_1st:5};
+  for (let [k,v] of Object.entries(scoringDefaults)) if (D.scoring[k]==null) D.scoring[k]=v;
   D.episodes.forEach(ep => {
     if (!ep.challenges) ep.challenges = {};
     if (!ep.advantages) ep.advantages = [];
