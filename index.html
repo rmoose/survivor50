@@ -866,6 +866,8 @@ function rebuildEvents(ep) {
   }
   if (ch.individual_immunity) evs.push({player:ch.individual_immunity,type:'individual_immunity',points:D.scoring.individual_immunity});
   if (ch.individual_reward) evs.push({player:ch.individual_reward,type:'individual_reward',points:D.scoring.individual_reward});
+  if (ch.individual_reward_2) evs.push({player:ch.individual_reward_2,type:'individual_reward',points:D.scoring.individual_reward});
+  if (ch.individual_reward_3) evs.push({player:ch.individual_reward_3,type:'individual_reward',points:D.scoring.individual_reward});
   for (let a of (ep.advantages||[])) evs.push({player:a.player,type:a.type,points:a.points});
   let mvp=ep.events.find(e=>e.type==='mvp');
   let lvp=ep.events.find(e=>e.type==='lvp');
@@ -1014,7 +1016,9 @@ function renderEntryPanel(ep) {
     return `<select class="ch-select" id="${id}">${o}</select>`;
   }
   h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity</span>${plSel('ch_ind_imm',ch.individual_immunity||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward</span>${plSel('ch_ind_rew',ch.individual_reward||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 1</span>${plSel('ch_ind_rew',ch.individual_reward||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 2</span>${plSel('ch_ind_rew2',ch.individual_reward_2||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 3</span>${plSel('ch_ind_rew3',ch.individual_reward_3||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
   h+='</div></div>';
 
   // Advantages
@@ -1077,6 +1081,18 @@ function renderEntryPanel(ep) {
   if (indRew) indRew.addEventListener('change',function(){
     let ep=curEp();if(!ep)return;
     ep.challenges.individual_reward=this.value;
+    rebuildEvents(ep);save();renderScoreboard(ep);renderTicker();renderLB();
+  });
+  let indRew2=$('ch_ind_rew2');
+  if (indRew2) indRew2.addEventListener('change',function(){
+    let ep=curEp();if(!ep)return;
+    ep.challenges.individual_reward_2=this.value;
+    rebuildEvents(ep);save();renderScoreboard(ep);renderTicker();renderLB();
+  });
+  let indRew3=$('ch_ind_rew3');
+  if (indRew3) indRew3.addEventListener('change',function(){
+    let ep=curEp();if(!ep)return;
+    ep.challenges.individual_reward_3=this.value;
     rebuildEvents(ep);save();renderScoreboard(ep);renderTicker();renderLB();
   });
   document.querySelectorAll('[data-adv]').forEach(cb=>{
