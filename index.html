@@ -1174,6 +1174,7 @@ function renderScoreboard(ep) {
     for (let i=0;i<cols.length-1;i++) h+='<td></td>';
     h+=`<td class="val-tot">${dt}</td></tr>`;
     for (let p of ps){
+      if (isOut(p) && epEvents(p,ep.number).length===0) continue;
       let evs=epEvents(p,ep.number), dm=isOut(p)?' dim':'';
       let rew=evs.filter(e=>['tribal_reward_1st','tribal_reward_2nd','individual_reward'].includes(e.type));
       let imm=evs.filter(e=>['tribal_immunity_1st','tribal_immunity_2nd','individual_immunity'].includes(e.type));
@@ -1301,7 +1302,7 @@ function renderPlFilters(){
 }
 function renderPlCards(){
   let f=$('filtDraft').value, so=$('sortPl').value;
-  let ps=allPlayers();
+  let ps=allPlayers().filter(p=>!isOut(p.name));
   if (f) ps=ps.filter(p=>p.drafter===f);
   if (so==='pts-d') ps.sort((a,b)=>playerPts(b.name)-playerPts(a.name));
   else if (so==='pts-a') ps.sort((a,b)=>playerPts(a.name)-playerPts(b.name));
