@@ -868,10 +868,10 @@ function rebuildEvents(ep) {
       for (let p of D.tribes[tribe]) evs.push({player:p,type:et,points:pts});
     }
   }
-  if (ch.individual_immunity) evs.push({player:ch.individual_immunity,type:'individual_immunity_1st',points:D.scoring.individual_immunity_1st||D.scoring.individual_immunity});
+  if (ch.individual_immunity) evs.push({player:ch.individual_immunity,type:'individual_immunity',points:D.scoring.individual_immunity});
   if (ch.individual_immunity_2) evs.push({player:ch.individual_immunity_2,type:'individual_immunity',points:D.scoring.individual_immunity});
   if (ch.individual_immunity_3) evs.push({player:ch.individual_immunity_3,type:'individual_immunity',points:D.scoring.individual_immunity});
-  if (ch.individual_reward) evs.push({player:ch.individual_reward,type:'individual_reward_1st',points:D.scoring.individual_reward_1st||D.scoring.individual_reward});
+  if (ch.individual_reward) evs.push({player:ch.individual_reward,type:'individual_reward',points:D.scoring.individual_reward});
   if (ch.individual_reward_2) evs.push({player:ch.individual_reward_2,type:'individual_reward',points:D.scoring.individual_reward});
   if (ch.individual_reward_3) evs.push({player:ch.individual_reward_3,type:'individual_reward',points:D.scoring.individual_reward});
   for (let a of (ep.advantages||[])) evs.push({player:a.player,type:a.type,points:a.points});
@@ -1021,12 +1021,12 @@ function renderEntryPanel(ep) {
     for (let p of ap) o+=`<option value="${p.name}"${p.name===cur?' selected':''}>${p.name}</option>`;
     return `<select class="ch-select" id="${id}">${o}</select>`;
   }
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity 1st</span>${plSel('ch_ind_imm',ch.individual_immunity||'')}<span class="ch-pts">+${D.scoring.individual_immunity_1st||D.scoring.individual_immunity}</span></div>`;
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity 2nd</span>${plSel('ch_ind_imm2',ch.individual_immunity_2||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity 3rd</span>${plSel('ch_ind_imm3',ch.individual_immunity_3||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 1st</span>${plSel('ch_ind_rew',ch.individual_reward||'')}<span class="ch-pts">+${D.scoring.individual_reward_1st||D.scoring.individual_reward}</span></div>`;
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 2nd</span>${plSel('ch_ind_rew2',ch.individual_reward_2||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
-  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 3rd</span>${plSel('ch_ind_rew3',ch.individual_reward_3||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity 1</span>${plSel('ch_ind_imm',ch.individual_immunity||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity 2</span>${plSel('ch_ind_imm2',ch.individual_immunity_2||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Immunity 3</span>${plSel('ch_ind_imm3',ch.individual_immunity_3||'')}<span class="ch-pts">+${D.scoring.individual_immunity}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 1</span>${plSel('ch_ind_rew',ch.individual_reward||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 2</span>${plSel('ch_ind_rew2',ch.individual_reward_2||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
+  h+=`<div class="ch-row"><span class="ch-label">Indiv. Reward 3</span>${plSel('ch_ind_rew3',ch.individual_reward_3||'')}<span class="ch-pts">+${D.scoring.individual_reward}</span></div>`;
   h+='</div></div>';
 
   // Advantages
