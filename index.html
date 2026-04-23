@@ -813,6 +813,18 @@ async function load() {
   const scoringDefaults = {individual_immunity_1st:7, individual_reward_1st:5};
   for (let [k,v] of Object.entries(scoringDefaults)) if (D.scoring[k]==null) D.scoring[k]=v;
   if (!D.transfers) D.transfers=[];
+  // Merge any transfers from seed that aren't already in localStorage
+  try {
+    let seed=JSON.parse(document.getElementById('embedded-data').textContent);
+    for (let st of (seed.transfers||[])) {
+      if (!D.transfers.find(t=>t.player===st.player)) D.transfers.push(st);
+    }
+    // Also ensure drafter arrays include transferred players from seed
+    for (let st of (seed.transfers||[])) {
+      let arr=D.drafters[st.toDrafter];
+      if (arr && !arr.includes(st.player)) arr.push(st.player);
+    }
+  } catch(e) {}
   // Backfill per-episode tribe snapshots from seed for episodes missing them
   try {
     let seedEps=JSON.parse(document.getElementById('embedded-data').textContent).episodes;
